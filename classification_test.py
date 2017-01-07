@@ -4,8 +4,8 @@ import tensorflow as tf
 
 train_set = pd.read_csv('C:/Users/lab/PycharmProjects/Insider Threat/test/trainset.csv', sep=',')
 cols = train_set.columns.tolist()
-colsx = cols[1:-2]
-colsy = cols[-2:]
+colsx = cols[1:-1]
+colsy = cols[-1:]
 print(cols)
 x_data = train_set[colsx]
 y_data = train_set[colsy]
@@ -13,9 +13,9 @@ y_data = train_set[colsy]
 print(x_data.shape)
 #print(y_data)
 
-X = tf.placeholder("float", [None, 54])
-Y = tf.placeholder("float", [None, 2])
-W = tf.Variable(tf.zeros([54, 2]))
+X = tf.placeholder("float", [None, 55])
+Y = tf.placeholder("float", [None, 1])
+W = tf.Variable(tf.random_uniform([55, 1], -1.0, 1.0))
 
 h = tf.matmul(X, W)
 hypothesis = tf.div(1., 1. + tf.exp(-h))
@@ -27,9 +27,9 @@ init = tf.global_variables_initializer()
 
 with tf.Session() as sess:
     sess.run(init)
-    for step in range(0, 2001):
+    for step in range(0, 201):
         sess.run(optimizer, feed_dict={X: x_data, Y: y_data})
-        if step % 200 == 0:
+        if step % 20 == 0:
             print(step, ": ", sess.run(cost, feed_dict={X: x_data, Y: y_data}))
             print("H:", sess.run(hypothesis, feed_dict={X: x_data}))
 

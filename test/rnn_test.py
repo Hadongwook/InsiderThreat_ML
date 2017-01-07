@@ -12,9 +12,11 @@ x_data = np.array([
     [0,0,1,0],      #l
     [0,0,1,0]       #l
 ], dtype='f')
-
+print(x_data)
 sample = [char_dic[c] for c in 'hello'] #to index
 print("sample: ", sample)
+print(type(sample))
+print(type(sample[0]))
 
 char_vocab_size = len(char_dic)
 rnn_size = char_vocab_size
@@ -57,4 +59,4 @@ with tf.Session() as sess:
     T_split = tf.split(0, time_step_size, test)
     outputs, state = tf.nn.rnn(rnn_cell,T_split, state)
     tresult = sess.run(tf.arg_max(logit, 1))
-    print("%r, %r" % (result, [char_rdic[t] for t in result]))
+    print("%r, %r" % (result, [char_rdic[t] for t in tresult]))
