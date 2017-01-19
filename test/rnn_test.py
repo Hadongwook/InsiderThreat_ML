@@ -36,7 +36,7 @@ weights = tf.ones([time_step_size * batch_size])
 loss = tf.nn.seq2seq.sequence_loss_by_example([logit], [targets], [weights])
 cost = tf.reduce_sum(loss) / batch_size
 train_op = tf.train.RMSPropOptimizer(0.01, 0.9).minimize(cost)
-
+predic_op = tf.arg_max(outputs, 1)
 with tf.Session() as sess:
     tf.initialize_all_variables().run()
     print("Xsplit: ", sess.run(X_split))

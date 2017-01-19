@@ -14,6 +14,7 @@ for insider in insiders:
     user = pd.read_csv('C:/Users/lab/InsiderThreat/daily_work/'+file, sep=',')
     user = pd.DataFrame(user)
     user_t = user.fillna(method='ffill', axis=1)
+    #print(user_t)
     #행동만 추출
     cols = user_t.columns.tolist()
     cols = cols[2:-1] + cols[-1:]
