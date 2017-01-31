@@ -4,7 +4,7 @@ import pandas as pd
 from sklearn.cluster import KMeans
 
 
-user = pd.read_csv('C:/Users/lab/InsiderThreat/daily_work/daily_f_u989.csv', sep=',')
+user = pd.read_csv('C:/Users/lab/InsiderThreat/daily_work/daily_f_u354.csv', sep=',')
 user = pd.DataFrame(user)
 user_t = user.fillna(method='ffill', axis=1)
 
@@ -24,4 +24,4 @@ plot_columns = pca_2.fit_transform(user_t)
 plt.scatter(x=plot_columns[:,0], y=plot_columns[:,1], c=labels, edgecolors='white', s=100)
 # Show the plot.
 print(labels)
-#plt.show()
+plt.show()
