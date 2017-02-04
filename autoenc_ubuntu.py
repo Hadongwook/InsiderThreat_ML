@@ -1,8 +1,10 @@
+# -*- coding: utf-8 -*-
+
 import pandas as pd
 import numpy as np
 import tensorflow as tf
 
-# 하루 일과에서 찾아낼 패턴의 길이
+# 하루 일과에서 찾아낼 패턴의 길이 7개의 행위로 이루어진 패턴으로 분석
 n_size = 4
 
 # train set에서 나올 수 있는 모든 패턴을 찾아낸다
@@ -65,12 +67,12 @@ with tf.Graph().as_default():
     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
     train_op = optimizer.minimize(loss)
 
-    for n in range(1000):
+    for n in range(0, 1000):
         #tensorflow session open
         #sess = tf.InteractiveSession()
         #유저 파일 하나씩 가져와서 실행
         file = 'daily_f_u' + str(n) + '.csv'
-        user = pd.read_csv('C:/Users/lab/InsiderThreat/daily_work/' + file, sep=',')
+        user = pd.read_csv('/home/ubuntu/inputs/' + file, sep=',')
 
         date = user['date']
 
@@ -85,7 +87,7 @@ with tf.Graph().as_default():
         with tf.Session() as sess:
             sess.run(tf.global_variables_initializer())
             for t in range(5001):
-                loss_t = train_seq(train_patterns)
+                loss_t = train_seq()
                 if t == 0:
                     print("training...")
                     """
@@ -110,7 +112,7 @@ with tf.Graph().as_default():
                 #print("loss: ", ploss)
                 #print("outpupts: ", np.array([logits_t.argmax(axis=1) for logits_t in dec_outputs_batch]).T, "\nloss: ", ploss)
                 loss_arr = np.append(loss_arr, [[ploss]], axis=0)
-                #print(date[x], ploss)
+                print(date[x], ploss)
 
-        pd.DataFrame(loss_arr).to_csv("C:/Users/lab/InsiderThreat/autoenc2/seq4/autoenc_w4_u"+str(n)+".csv", sep=",")
+        pd.DataFrame(loss_arr).to_csv("/home/ubuntu/ouputs/win4/autoenc_w4_u"+str(n)+".csv", sep=",")
         print("user ",n," done.")

@@ -1,8 +1,13 @@
 import numpy as np
 
-a = [1,2,3,4,5]
-sequence = [0,6]
-n_size = 7
-print(np.lib.pad(a, (0,3),'edge'))
-temp = np.lib.pad(sequence,(0,(n_size - len(sequence))), 'edge')
-print(temp)
+a = np.arange(100)
+print(a)
+for i in range(0, len(a), 7):
+    temp = a[i:i+7]
+    if len(temp) < 7:
+        temp = np.pad(temp, (0,7-len(temp)), 'edge')
+
+    print(temp)
+
+
+
