@@ -69,13 +69,15 @@ with tf.Graph().as_default():
     train_op = optimizer.minimize(loss)
 
     saver = tf.train.Saver()
-    for n in range(1000):
+    anomalies = np.array([['name', 'date', 'loss']])
+    dict = pd.read_csv('C:/Users/lab/InsiderThreat/dictionary.csv', sep=',')
+    dict = dict['user']
+    for n in range(2):
         #tensorflow session open
         #sess = tf.InteractiveSession()
         #유저 파일 하나씩 가져와서 실행
         file = 'daily_f_u' + str(n) + '.csv'
         user = pd.read_csv('C:/Users/lab/InsiderThreat/daily_work/' + file, sep=',')
-
         date = user['date']
 
         print("start user ", n)
@@ -104,7 +106,7 @@ with tf.Graph().as_default():
             loss_arr = np.zeros((60, 1))
             sess.run(tf.global_variables_initializer())
             saver.restore(sess, 'C:/Users/lab/InsiderThreat/autoenc2/saver/saver_' + file + '.ckpt')
-
+            print(len(test_set))
             for x in range(60, len(test_set)):
                 if x % 5 == 0:
                     train_patterns = [[1, 1, 1, 1]]
@@ -123,7 +125,12 @@ with tf.Graph().as_default():
                     ploss = 0
 
                 loss_arr = np.append(loss_arr, [[ploss]], axis=0)
-                print(x, ", ", ploss)
+                #print(x, ", ", ploss)
+                #0.3 이상이면 이상행동에 추가
+                if ploss >= 0.3:
+                    #print([[dict[n], date[x], ploss]])
+                    anomalies = np.append(anomalies, np.array([[dict[n], date[x], ploss]]), axis=0)
+
 
                 if (x + 1) % 5 == 0:
                     temp = user[(x + 1) - 60:(x + 1)]
@@ -137,5 +144,8 @@ with tf.Graph().as_default():
                         loss_t = train_seq(train_patterns)
                     save_path = saver.save(sess, 'C:/Users/lab/InsiderThreat/autoenc2/saver/saver_' + file + '.ckpt')
 
-        pd.DataFrame(loss_arr).to_csv("C:/Users/lab/InsiderThreat/autoenc2/retrain/retrain_w4_u"+str(n)+".csv", sep=",")
+        pd.DataFrame(loss_arr).to_csv("C:/Users/lab/InsiderThreat/autoenc2/retrain/retrain_w4_u"+str(n)+"_2.csv", sep=",")
         print("user ",n," done.")
+anomalies = np.delete(anomalies, 0, 0)
+anomalies = pd.DataFrame(anomalies, columns=['user', 'date', 'loss'])
+anomalies.to_csv('C:/Users/lab/InsiderThreat/autoenc2/predict/w4_predict0.3_ver3.csv', sep=',')

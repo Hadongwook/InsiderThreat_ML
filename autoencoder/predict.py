@@ -22,4 +22,4 @@ for n in range(1000):
 
 anomalies = np.delete(anomalies, 0, 0)
 anomalies = pd.DataFrame(anomalies, columns=['user', 'date', 'loss'])
-anomalies.to_csv('C:/Users/lab/InsiderThreat/autoenc2/predict/w4_predict0.3.csv', sep=',')
+anomalies.to_csv('C:/Users/lab/InsiderThreat/autoenc2/predict/w4_predict0.3_ver2.csv', sep=',')

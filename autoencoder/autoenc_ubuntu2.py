@@ -4,7 +4,7 @@ import pandas as pd
 import numpy as np
 import tensorflow as tf
 
-# 하루 일과에서 찾아낼 패턴의 길이 7개의 행위로 이루어진 패턴으로 분석
+# 하루 일과에서 찾아낼 패턴의 길이
 n_size = 4
 
 # train set에서 나올 수 있는 모든 패턴을 찾아낸다
@@ -67,7 +67,11 @@ with tf.Graph().as_default():
     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
     train_op = optimizer.minimize(loss)
 
-    for n in range(500, 1000):
+    saver = tf.train.Saver(max_to_keep=1000)
+    anomalies = np.array([['name', 'date', 'loss']])
+    dict = pd.read_csv('/home/ubuntu/inputs/dictionary.csv', sep=',')
+    dict = dict['user']
+    for n in range(1000):
         #tensorflow session open
         #sess = tf.InteractiveSession()
         #유저 파일 하나씩 가져와서 실행
@@ -95,24 +99,53 @@ with tf.Graph().as_default():
                         print("step: ", t, "loss: ", loss_t)
                     """
             print("user ", n, "trained. loss: ", loss_t)
+            save_path = saver.save(sess, '/home/ubuntu/saver/saver_' + file + '.ckpt')
+
             loss_arr = [[loss_t]]
+            #트레이닝 셋트에서 유에스비 connect 횟수 구함
+            counter = [0]
+            for i in train_set:
+                t = len(i[i == 4])
+                counter = np.append(counter, t)
+            counter = np.delete(counter, 0, 0)
+            mean = np.mean(counter)
+            std = np.std(counter)
             for x in range(len(test_set)):
                 if x == 0:
                     print("testing...")
-                seq = [test_set[x]]
-                test_patterns = get_patterns(seq, n_size)
-                X = test_patterns
-                X = np.array(X, dtype=int).T
-                Y = X
+                seq_len = len(np.array(test_set[x][~np.isnan(test_set[x])]))
+                if seq_len > 3:
+                    seq = [test_set[x]]
+                    test_patterns = get_patterns(seq, n_size)
+                    X = test_patterns
+                    X = np.array(X, dtype=int).T
+                    Y = X
+                    feed_dict = {enc_inp[t]: X[t] for t in range(seq_length)}
+                    feed_dict.update({labels[t]: Y[t] for t in range(seq_length)})
+                    dec_outputs_batch = sess.run(dec_outputs, feed_dict)
+                    ploss = sess.run(loss, feed_dict)
 
-                feed_dict = {enc_inp[t]: X[t] for t in range(seq_length)}
-                feed_dict.update({labels[t]: Y[t] for t in range(seq_length)})
-                dec_outputs_batch = sess.run(dec_outputs, feed_dict)
-                ploss = sess.run(loss, feed_dict)
+                    # usb를 더 많이 사용할 수 록 페널티를 줌
+                    if mean >= 2:
+                        s = test_set[x]
+                        std_score = np.rint((len(s[s == 4]) - mean) / std)
+                        if std_score >= 0:
+                            ploss = ploss + (std_score * 0.3)
+                else:
+                    ploss = 0
                 #print("loss: ", ploss)
                 #print("outpupts: ", np.array([logits_t.argmax(axis=1) for logits_t in dec_outputs_batch]).T, "\nloss: ", ploss)
                 loss_arr = np.append(loss_arr, [[ploss]], axis=0)
-                print(date[x], ploss)
+                #print(date[x], ploss)
 
-        pd.DataFrame(loss_arr).to_csv("/home/ubuntu/ouputs/win4/autoenc_w4_u"+str(n)+".csv", sep=",")
+                # 0.3 이상이면 이상행동에 추가
+                if ploss >= 0.3:
+                    # print([[dict[n], date[x], ploss]])
+                    anomalies = np.append(anomalies, np.array([[dict[n], date[x], ploss]]), axis=0)
+
+        pd.DataFrame(loss_arr).to_csv('/home/ubuntu/outputs/win4_3/autoenc_w4_u'+str(n)+'.csv', sep=',')
         print("user ",n," done.")
+
+anomalies = np.delete(anomalies, 0, 0)
+anomalies = pd.DataFrame(anomalies, columns=['user', 'date', 'loss'])
+anomalies.to_csv('/home/ubuntu/predict/w4_predict0.3_ver3.csv', sep=',')

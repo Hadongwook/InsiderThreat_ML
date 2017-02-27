@@ -7,7 +7,7 @@ n_size = 4
 
 # train set에서 나올 수 있는 모든 패턴을 찾아낸다
 def get_patterns(data_set, size):
-    patterns = np.random.rand(1, 4)
+    patterns = np.random.rand(1, n_size)
     for i in range(0,len(data_set)):
         sequence = data_set[i]
         sequence = np.array(sequence[~np.isnan(sequence)])
@@ -65,7 +65,11 @@ with tf.Graph().as_default():
     optimizer = tf.train.MomentumOptimizer(learning_rate, momentum)
     train_op = optimizer.minimize(loss)
 
-    for n in range(1000):
+    saver = tf.train.Saver()
+    anomalies = np.array([['name', 'date', 'loss']])
+    dict = pd.read_csv('C:/Users/lab/InsiderThreat/dictionary.csv', sep=',')
+    dict = dict['user']
+    for n in range(2):
         #tensorflow session open
         #sess = tf.InteractiveSession()
         #유저 파일 하나씩 가져와서 실행
@@ -93,24 +97,38 @@ with tf.Graph().as_default():
                         print("step: ", t, "loss: ", loss_t)
                     """
             print("user ", n, "trained. loss: ", loss_t)
+            save_path = saver.save(sess, 'C:/Users/lab/InsiderThreat/autoenc2/saver/saver_' + file + '.ckpt')
+
             loss_arr = [[loss_t]]
             for x in range(len(test_set)):
                 if x == 0:
                     print("testing...")
-                seq = [test_set[x]]
-                test_patterns = get_patterns(seq, n_size)
-                X = test_patterns
-                X = np.array(X, dtype=int).T
-                Y = X
-
-                feed_dict = {enc_inp[t]: X[t] for t in range(seq_length)}
-                feed_dict.update({labels[t]: Y[t] for t in range(seq_length)})
-                dec_outputs_batch = sess.run(dec_outputs, feed_dict)
-                ploss = sess.run(loss, feed_dict)
+                seq_len = len(np.array(test_set[x][~np.isnan(test_set[x])]))
+                if seq_len > 3:
+                    seq = [test_set[x]]
+                    test_patterns = get_patterns(seq, n_size)
+                    X = test_patterns
+                    X = np.array(X, dtype=int).T
+                    Y = X
+                    feed_dict = {enc_inp[t]: X[t] for t in range(seq_length)}
+                    feed_dict.update({labels[t]: Y[t] for t in range(seq_length)})
+                    dec_outputs_batch = sess.run(dec_outputs, feed_dict)
+                    ploss = sess.run(loss, feed_dict)
+                else:
+                    ploss = 0
                 #print("loss: ", ploss)
                 #print("outpupts: ", np.array([logits_t.argmax(axis=1) for logits_t in dec_outputs_batch]).T, "\nloss: ", ploss)
                 loss_arr = np.append(loss_arr, [[ploss]], axis=0)
                 #print(date[x], ploss)
 
-        pd.DataFrame(loss_arr).to_csv("C:/Users/lab/InsiderThreat/autoenc2/seq4/autoenc_w4_u"+str(n)+".csv", sep=",")
+                # 0.3 이상이면 이상행동에 추가
+                if ploss >= 0.3:
+                    # print([[dict[n], date[x], ploss]])
+                    anomalies = np.append(anomalies, np.array([[dict[n], date[x], ploss]]), axis=0)
+
+        pd.DataFrame(loss_arr).to_csv("C:/Users/lab/InsiderThreat/autoenc2/seq4/autoenc_w4_u"+str(n)+"_t.csv", sep=",")
         print("user ",n," done.")
+
+anomalies = np.delete(anomalies, 0, 0)
+anomalies = pd.DataFrame(anomalies, columns=['user', 'date', 'loss'])
+anomalies.to_csv('C:/Users/lab/InsiderThreat/autoenc2/predict/w4_predict0.3_ver3.csv', sep=',')
