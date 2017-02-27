@@ -138,8 +138,8 @@ with tf.Graph().as_default():
                 loss_arr = np.append(loss_arr, [[ploss]], axis=0)
                 #print(date[x], ploss)
 
-                # 0.3 이상이면 이상행동에 추가
-                if ploss >= 0.3:
+                # 0.9 이상이면 이상행동에 추가
+                if ploss >= 0.9:
                     # print([[dict[n], date[x], ploss]])
                     anomalies = np.append(anomalies, np.array([[dict[n], date[x], ploss]]), axis=0)
 
